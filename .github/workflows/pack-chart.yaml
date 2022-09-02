@@ -50,7 +50,7 @@ jobs:
         exercise_name=$(jq -r '.ExerciseName' metadata.json)
         repository_name=$(echo "${exercise_name}-${{ inputs.chart-path }}" | tr -s "_" "-")
 
-        if [[ -z $(aws ecr describe-repository --query "repositories[?repositoryName=='$repository_name'].repositoryName" --output text) ]]; then
+        if [[ -z $(aws ecr describe-repositories --query "repositories[?repositoryName=='$repository_name'].repositoryName" --output text) ]]; then
           aws ecr create-repository \
             --no-cli-pager \
             --repository-name $repository_name
