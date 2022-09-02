@@ -47,8 +47,8 @@ jobs:
 
     - name: Pack and push
       run: |
-        exercise_name=$(jq -r '.ExerciseName' metadata.json)
-        repository_name=$(echo "${exercise_name}-${{ inputs.chart-path }}" | tr -s "_" "-")
+        exercise_name=$(jq -r '.ExerciseName.S' metadata.json)
+        repository_name="${exercise_name}-${{ inputs.chart-path }}"
 
         if [[ -z $(aws ecr describe-repositories --query "repositories[?repositoryName=='$repository_name'].repositoryName" --output text) ]]; then
           aws ecr create-repository \
