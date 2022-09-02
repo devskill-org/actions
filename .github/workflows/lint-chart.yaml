@@ -1,0 +1,22 @@
+name: Lint Helm chart
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - uses: azure/setup-helm@v1
+      with:
+        version: '3.9.4'
+
+    - uses: helm/chart-testing-action@v2.2.1
+
+    - name: Lint charts
+      run: ct lint --config .ci/ct.yaml
