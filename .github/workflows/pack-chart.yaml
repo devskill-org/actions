@@ -22,42 +22,43 @@ on:
         required: true
 
 jobs:
-  runs-on: ubuntu-latest
-  steps:
-  - uses: actions/checkout@v3
+  pack-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
 
-  - name: Configure AWS credentials
-    uses: aws-actions/configure-aws-credentials@v1
-    with:
-      aws-access-key-id: ${{ secrets.aws-access-key-id }}
-      aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
-      aws-region: ${{ inputs.region }}
-      role-to-assume: ${{ secrets.role-to-assume }}
-      role-duration-seconds: ${{ inputs.role-duration-seconds }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.aws-access-key-id }}
+        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ secrets.role-to-assume }}
+        role-duration-seconds: ${{ inputs.role-duration-seconds }}
 
-  - name: Login to ECR
-    id: login-ecr
-    uses: aws-actions/amazon-ecr-login@v1
+    - name: Login to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-  - name: Setup Helm
-    uses: azure/setup-helm@v1
-    with:
-      version: '3.9.4'
+    - name: Setup Helm
+      uses: azure/setup-helm@v1
+      with:
+        version: '3.9.4'
 
-  - name: Pack and push
-    run: |
-      exercise_name=$(jq -r '.ExerciseName' metadata.json)
-      repository_name=$(echo "${exercise_name}-${{ inputs.chart-path }}" | tr -s "_" "-")
+    - name: Pack and push
+      run: |
+        exercise_name=$(jq -r '.ExerciseName' metadata.json)
+        repository_name=$(echo "${exercise_name}-${{ inputs.chart-path }}" | tr -s "_" "-")
 
-      if [[ -z $(aws ecr describe-repository --query "repositories[?repositoryName=='$repository_name'].repositoryName" --output text) ]]; then
-        aws ecr create-repository \
-          --no-cli-pager \
-          --repository-name $repository_name
-        aws ecr put-lifecycle-policy \
-          --no-cli-pager \
-          --repository-name $repository_name \
-          --lifecycle-policy-text file://.ci/ecr-lifecycle-policy.json
-      fi
+        if [[ -z $(aws ecr describe-repository --query "repositories[?repositoryName=='$repository_name'].repositoryName" --output text) ]]; then
+          aws ecr create-repository \
+            --no-cli-pager \
+            --repository-name $repository_name
+          aws ecr put-lifecycle-policy \
+            --no-cli-pager \
+            --repository-name $repository_name \
+            --lifecycle-policy-text file://.ci/ecr-lifecycle-policy.json
+        fi
 
-      helm package ${{ inputs.chart-path }}
-      helm push $(find . -name "${repository_name}-*.tgz") oci://${{ steps.login-ecr.outputs.registry }}
+        helm package ${{ inputs.chart-path }}
+        helm push $(find . -name "${repository_name}-*.tgz") oci://${{ steps.login-ecr.outputs.registry }}

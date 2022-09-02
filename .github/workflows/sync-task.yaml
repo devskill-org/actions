@@ -22,44 +22,45 @@ on:
         required: true
 
 jobs:
-  runs-on: ubuntu-latest
-  steps:
-  - uses: actions/checkout@v3
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
 
-  - name: Configure AWS credentials
-    uses: aws-actions/configure-aws-credentials@v1
-    with:
-      aws-access-key-id: ${{ secrets.aws-access-key-id }}
-      aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
-      aws-region: ${{ inputs.region }}
-      role-to-assume: ${{ secrets.role-to-assume }}
-      role-duration-seconds: ${{ inputs.role-duration-seconds }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.aws-access-key-id }}
+        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ secrets.role-to-assume }}
+        role-duration-seconds: ${{ inputs.role-duration-seconds }}
 
-  - name: Check item exists in a table
-    id: check-item
-    run: |
-      item=$(aws dynamodb get-item \
-        --table-name ${{ inputs.exercise-table-name }} \
-        --key exerciseId={S=$(jq -r '.exerciseId.S' metadata.json)})
-      if [[ -n $item ]]; then
-        echo "::set-output name=exists::true"
-      else
-        echo "::set-output name=exists::false"
-      fi
+    - name: Check item exists in a table
+      id: check-item
+      run: |
+        item=$(aws dynamodb get-item \
+          --table-name ${{ inputs.exercise-table-name }} \
+          --key exerciseId={S=$(jq -r '.exerciseId.S' metadata.json)})
+        if [[ -n $item ]]; then
+          echo "::set-output name=exists::true"
+        else
+          echo "::set-output name=exists::false"
+        fi
 
-  - name: Create new item in a table
-    if: steps.check-item.outputs.exists == 'false'
-    run: |
-      aws dynamodb put-item \
-        --table-name ${{ inputs.exercise-table-name }} \
-        --item file://metadata.json
+    - name: Create new item in a table
+      if: steps.check-item.outputs.exists == 'false'
+      run: |
+        aws dynamodb put-item \
+          --table-name ${{ inputs.exercise-table-name }} \
+          --item file://metadata.json
 
-  - name: Update existing item in a table
-    if: steps.check-item.outputs.exists == 'true'
-    run: |
-      aws dynamodb delete-item \
-        --table-name ${{ inputs.exercise-table-name }} \
-        --key exerciseId={S=$(jq -r '.exerciseId.S' metadata.json)}
-      aws dynamodb put-item \
-        --table-name ${{ inputs.exercise-table-name }} \
-        --item file://metadata.json
+    - name: Update existing item in a table
+      if: steps.check-item.outputs.exists == 'true'
+      run: |
+        aws dynamodb delete-item \
+          --table-name ${{ inputs.exercise-table-name }} \
+          --key exerciseId={S=$(jq -r '.exerciseId.S' metadata.json)}
+        aws dynamodb put-item \
+          --table-name ${{ inputs.exercise-table-name }} \
+          --item file://metadata.json
