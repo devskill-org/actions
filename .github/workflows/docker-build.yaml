@@ -1,0 +1,64 @@
+name: Docker build
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+      role-duration-seconds:
+        required: false
+        type: number
+        default: 3600
+      no-cache:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      aws-access-key-id:
+        required: true
+      aws-secret-access-key:
+        required: true
+      role-to-assume:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      hash: steps.tags.outputs.hash
+      ref: steps.tags.outputs.tag
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          ${{ inputs.image-name }}
+        tags: |
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=semver,value={{raw}}
+          type=sha,prefix=,format=long,enable=true
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and push
+      if: ${{ github.event.inputs.nocache == 'false' }}
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ matrix.paths }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push without cache
+      if: ${{ github.event.inputs.nocache == 'true' }}
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ matrix.paths }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
