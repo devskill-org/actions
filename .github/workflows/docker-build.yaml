@@ -39,7 +39,7 @@ jobs:
           ${{ inputs.image-name }}
         tags: |
           type=raw,value=latest,enable={{is_default_branch}}
-          type=semver,value={{raw}}
+          type=semver,pattern={{raw}}
           type=sha,prefix=,format=long,enable=true
 
     - name: Setup Docker Buildx
