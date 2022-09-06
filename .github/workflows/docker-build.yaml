@@ -65,7 +65,7 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: Build and push
-      if: ${{ github.event.inputs.nocache == 'false' }}
+      if: ${{ github.event.inputs.no-cache == 'false' }}
       uses: docker/build-push-action@v3
       with:
         context: ${{ inputs.context }}
@@ -75,7 +75,7 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Build and push without cache
-      if: ${{ github.event.inputs.nocache == 'true' }}
+      if: ${{ github.event.inputs.no-cache == 'true' }}
       uses: docker/build-push-action@v3
       with:
         context: ${{ inputs.context }}
