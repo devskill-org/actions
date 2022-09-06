@@ -3,6 +3,9 @@ name: Docker build
 on:
   workflow_call:
     inputs:
+      image-path:
+        required: true
+        type: string
       image-name:
         required: true
         type: string
@@ -49,7 +52,7 @@ jobs:
       if: ${{ github.event.inputs.nocache == 'false' }}
       uses: docker/build-push-action@v3
       with:
-        context: ${{ matrix.paths }}
+        context: ${{ inputs.image-path }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         cache-from: type=gha
@@ -59,6 +62,6 @@ jobs:
       if: ${{ github.event.inputs.nocache == 'true' }}
       uses: docker/build-push-action@v3
       with:
-        context: ${{ matrix.paths }}
+        context: ${{ inputs.image-path }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
