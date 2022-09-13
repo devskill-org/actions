@@ -19,8 +19,8 @@ on:
         default: 3600
       no-cache:
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: 'false'
     secrets:
       aws-access-key-id:
         required: true
