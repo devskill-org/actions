@@ -28,11 +28,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     outputs:
       hash: steps.tags.outputs.hash
       ref: steps.tags.outputs.tag
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -49,7 +55,7 @@ jobs:
 
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
         images: |
           ${{ steps.ecr-login.outputs.registry }}/${{ inputs.image-name }}
@@ -65,7 +71,8 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.context }}
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ matrix.platform }}
+        labels: ${{ steps.meta.outputs.labels }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         cache-from: type=gha
