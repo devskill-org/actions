@@ -28,12 +28,6 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
     outputs:
       hash: steps.tags.outputs.hash
       ref: steps.tags.outputs.tag
@@ -71,9 +65,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.context }}
-        platforms: ${{ matrix.platform }}
+        platforms: linux/amd64,linux/arm64
         labels: ${{ steps.meta.outputs.labels }}
-        push: true
         tags: ${{ steps.meta.outputs.tags }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        push: true
