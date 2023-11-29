@@ -47,6 +47,22 @@ jobs:
       id: ecr-login
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Create ECR Repo if not exist
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+          if [[ -z $(aws ecr describe-repositories --query "repositories[?repositoryName=='$repo_name'].repositoryName" --output text) ]]; then
+            aws ecr create-repository \
+              --no-cli-pager \
+              --repository-name \
+              ${{ inputs.image-name }}
+            aws ecr put-lifecycle-policy \
+              --no-cli-pager \
+              --repository-name \
+              ${{ inputs.image-name }} \
+              --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"Expire images older then 14 days","selection":{"tagStatus":"untagged","countType":"sinceImagePushed","countUnit":"days","countNumber":14},"action":{"type":"expire"}}]}'
+          fi
+
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v5
