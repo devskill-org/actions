@@ -51,7 +51,7 @@ jobs:
       env:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
-          if [[ -z $(aws ecr describe-repositories --query "repositories[?repositoryName=='$repo_name'].repositoryName" --output text) ]]; then
+          if [[ -z $(aws ecr describe-repositories --query "repositories[?repositoryName=='${{ inputs.image-name }}'].repositoryName" --output text) ]]; then
             aws ecr create-repository \
               --no-cli-pager \
               --repository-name \
